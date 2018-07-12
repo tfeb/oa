@@ -1,0 +1,19 @@
+# Ignore emacs backups & auto save files
+*~
+\#*\#
+.\#*
+
+# Ignore OSX rubbish
+.DS_Store
+.localized
+
+# ignore .preserve directories
+.preserve/
+preserve/
+
+# and some scratch directories
+tmp/
+scratch/
+
+# And Racket compiled directories
+compiled/
