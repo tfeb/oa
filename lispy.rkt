@@ -2,8 +2,8 @@
 
 ;;;; One-arg
 ;;;
-;;; Lispy version: lambda has parens around the argument and function
-;;; application does not uncurry.
+;;; Lispy version: lambda either be (lambda arg val) or (lambda (arg ...) val)
+;;; which turns into the nested thing & function application uncurries
 ;;;
 
 (module reader syntax/module-reader
@@ -32,9 +32,8 @@
   (syntax-case stx ()
     [(_ procedure argument)
      #'(procedure argument)]
-    [(_ procedure argument ...)
-     (parameterize ([current-syntax-context #'procedure])
-       (wrong-syntax #'(procedure argument ...) "need just one argument"))]
+    [(_ procedure argument more ...)
+     #'(lispy:app (procedure argument) more ...)]
     [(_ procedure)
      (parameterize ([current-syntax-context #'procedure])
        (wrong-syntax #'(procedure) "need one argument"))]
@@ -42,9 +41,23 @@
      (parameterize ([current-syntax-context #f])
        (wrong-syntax #'() "not a function application"))]))
 
-(define-syntax-rule (lispy:lambda (arg) form)
-  ;; single-argument, single-form lambda
-  (lambda (arg) form))
+(define-syntax (lispy:lambda stx)
+  ;; A slightly fancy single-form lambda
+  (parameterize ([current-syntax-context stx])
+    (syntax-case stx ()
+      [(_ (argument) form)
+       #'(λ (argument) form)]
+      [(_ (argument more ...) form)
+       #'(λ (argument) (lispy:lambda (more ...) form))]
+      [(_ () form)
+       (wrong-syntax stx "zero-argument λ")]
+      [(_ argument form)
+       (identifier? #'argument)
+       #'(λ (argument) form)]
+      [(_ _ form ...+)
+       (wrong-syntax stx "more than one form in λ body")]
+      [else
+       (wrong-syntax stx "what even is this?")])))
 
 (define-syntax (lispy:define stx)
   ;; trivial define

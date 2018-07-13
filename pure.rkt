@@ -2,8 +2,8 @@
 
 ;;;; One-arg
 ;;;
-;;; Pure version: lambda does not have parens for its argument,
-;;; and function application uncurries: (f a b) is ((f a) b)
+;;; Pure version: lambda does not have parens for its single argument,
+;;; and function application works only with one argument
 ;;;
 
 (module reader syntax/module-reader
@@ -32,8 +32,9 @@
   (syntax-case stx ()
     [(_ procedure argument)
      #'(procedure argument)]
-    [(_ procedure argument more ...)
-     #'(pure:app (procedure argument) more ...)]
+    [(_ procedure argument ...)
+     (parameterize ([current-syntax-context #'procedure])
+       (wrong-syntax #'(procedure argument ...) "need just one argument"))]
     [(_ procedure)
      (parameterize ([current-syntax-context #'procedure])
        (wrong-syntax #'(procedure) "need one argument"))]
@@ -41,9 +42,21 @@
      (parameterize ([current-syntax-context #f])
        (wrong-syntax #'() "not a function application"))]))
 
-(define-syntax-rule (pure:lambda arg form)
+(define-syntax (pure:lambda stx)
   ;; single-argument, single-form lambda
-  (lambda (arg) form))
+  (parameterize ([current-syntax-context stx])
+    (syntax-case stx ()
+      [(_ (argument ...+) form)
+       (wrong-syntax stx "λ doesn't have a list of args")]
+      [(_ () form)
+       (wrong-syntax stx "don't even try a zero-length list of args for λ")]
+      [(_ argument form)
+       (identifier? #'argument)
+       #'(λ (argument) form)]
+      [(_ _ form ...+)
+       (wrong-syntax stx "more than one form in λ body")]
+      [else
+       (wrong-syntax stx "what even is this?")])))
 
 (define-syntax (pure:define stx)
   ;; trivial define
