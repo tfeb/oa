@@ -2,9 +2,12 @@
 
 ;;;; One-arg
 ;;;
+;;; Lispy version: lambda has parens around the argument and function
+;;; application does not uncurry.
+;;;
 
 (module reader syntax/module-reader
-  oa)
+  oa/lispy)
 
 ;;; Things from racket we need
 ;;;
@@ -16,34 +19,34 @@
 
 ;;; Restricted versions of some things
 (provide (rename-out
-          (oa:app #%app)
-          (oa:lambda lambda)
-          (oa:lambda λ)
-          (oa:define define)))
+          (lispy:app #%app)
+          (lispy:lambda lambda)
+          (lispy:lambda λ)
+          (lispy:define define)))
 
 (require (for-syntax (only-in racket/syntax
                               current-syntax-context
                               wrong-syntax)))
-(define-syntax (oa:app stx)
+(define-syntax (lispy:app stx)
   ;; A version of #%app which allows only one argument
   (syntax-case stx ()
     [(_ procedure argument)
      #'(procedure argument)]
-    [(_ proc)
-     (parameterize ([current-syntax-context #'proc])
-       (wrong-syntax #'(proc) "need one argument"))]
-    [(_ proc arg ...)
-     (parameterize ([current-syntax-context #'proc])
-       (wrong-syntax #'(proc arg ...) "need just one argument"))]
-    [else1
+    [(_ procedure argument ...)
+     (parameterize ([current-syntax-context #'procedure])
+       (wrong-syntax #'(procedure argument ...) "need just one argument"))]
+    [(_ procedure)
+     (parameterize ([current-syntax-context #'procedure])
+       (wrong-syntax #'(procedure) "need one argument"))]
+    [else
      (parameterize ([current-syntax-context #f])
        (wrong-syntax #'() "not a function application"))]))
 
-(define-syntax-rule (oa:lambda (arg) form)
+(define-syntax-rule (lispy:lambda (arg) form)
   ;; single-argument, single-form lambda
   (lambda (arg) form))
 
-(define-syntax (oa:define stx)
+(define-syntax (lispy:define stx)
   ;; trivial define
   (parameterize ([current-syntax-context stx])
     (syntax-case stx ()
