@@ -51,22 +51,3 @@
        (wrong-syntax #'(id ...) "fancy defines don't work")]
       [(_ id form)
        #'(define id form)])))
-
-;;; Curried arithmetic functions
-;;;
-(provide
- (rename-out
-  (oa:+ +)
-  (oa:- -)
-  (oa:* *)
-  (oa:/ /)
-  (oa:= =)))
-
-(define-values (oa:+ oa:- oa:* oa:/ oa:=)
-  (let ([op (λ (o) (λ (a) (λ (b) (+ a b))))])
-    (values
-     (op +)
-     (op -)
-     (op *)
-     (op /)
-     (op =))))
