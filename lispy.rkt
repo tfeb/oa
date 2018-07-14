@@ -26,7 +26,11 @@
 
 (require (for-syntax (only-in racket/syntax
                               current-syntax-context
-                              wrong-syntax)))
+                              wrong-syntax))
+         (only-in "private/printer-hax.rkt"
+                  stash-for-printing
+                  print-with-stashes))
+
 (define-syntax (lispy:app stx)
   ;; A version of #%app which allows only one argument
   (syntax-case stx ()
@@ -63,7 +67,12 @@
   ;; trivial define
   (parameterize ([current-syntax-context stx])
     (syntax-case stx ()
+      [(_ id form)
+       (identifier? #'id)
+       #'(define id (stash-for-printing 'id form))]
       [(_ (id ...) form ...)
        (wrong-syntax #'(id ...) "fancy defines don't work")]
-      [(_ id form)
-       #'(define id form)])))
+      [else
+       (wrong-syntax stx "what on earth is this?")])))
+
+(print-with-stashes #t)
