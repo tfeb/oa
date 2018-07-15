@@ -2,7 +2,7 @@
 
 ;;;; One-arg
 ;;;
-;;; Fancy / lispy version, applicative order
+;;; Fancy / lispy version, normal order
 ;;; - lambda can be: (lambda arg form), (lambda (arg) form) which
 ;;;   turns into (lambda arg form) or (lambda (arg more ...) form)
 ;;;   which turns into ((lambda arg (lambda (more ...) form)))
@@ -11,7 +11,7 @@
 ;;;
 
 (module reader syntax/module-reader
-  oa/applicative/fancy)
+  oa/normal/fancy)
 
 ;;; Things from racket we need
 ;;;
@@ -39,7 +39,9 @@
   ;; A version of #%app which allows only one argument
   (syntax-case stx ()
     [(_ procedure argument)
-     #'(procedure argument)]
+     (if (memq (syntax-local-context) '(top-level module module-begin))
+         #'(force (procedure argument))
+         #'(procedure argument))]
     [(_ procedure argument more ...)
      #'(fancy:app (procedure argument) more ...)]
     [(_ procedure)
@@ -55,7 +57,7 @@
     (syntax-case stx ()
       [(_ argument form)
        (identifier? #'argument)
-       #'(λ (argument) form)]
+       #'(λ (argument) (lazy form))]
       [(_ (argument) form)
        (identifier? #'argument)
        #'(fancy:lambda argument form)]

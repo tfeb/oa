@@ -2,16 +2,14 @@
 
 ;;;; One-arg
 ;;;
-;;; Fancy / lispy version, applicative order
-;;; - lambda can be: (lambda arg form), (lambda (arg) form) which
-;;;   turns into (lambda arg form) or (lambda (arg more ...) form)
-;;;   which turns into ((lambda arg (lambda (more ...) form)))
-;;; - function application can take more than one argument and uncurries:
-;;;   (f a b ...) is ((f a) b ...)
+
+;;; Pure version, normal order: lambda does not have parens for
+;;; its single argument, and function application works only with one
+;;; argument
 ;;;
 
 (module reader syntax/module-reader
-  oa/applicative/fancy)
+  oa/normal/pure)
 
 ;;; Things from racket we need
 ;;;
@@ -23,10 +21,10 @@
 
 ;;; Restricted versions of some things
 (provide (rename-out
-          (fancy:app #%app)
-          (fancy:lambda lambda)
-          (fancy:lambda λ)
-          (fancy:define define)))
+          (pure:app #%app)
+          (pure:lambda lambda)
+          (pure:lambda λ)
+          (pure:define define)))
 
 (require (for-syntax (only-in racket/syntax
                               current-syntax-context
@@ -35,13 +33,17 @@
                   stash-for-printing
                   print-with-stashes))
 
-(define-syntax (fancy:app stx)
+(define-syntax (pure:app stx)
   ;; A version of #%app which allows only one argument
   (syntax-case stx ()
     [(_ procedure argument)
-     #'(procedure argument)]
-    [(_ procedure argument more ...)
-     #'(fancy:app (procedure argument) more ...)]
+     (if (memq (syntax-local-context) '(top-level module module-begin))
+         ;; if at toplevel then force any promises
+         #'(force ((force procedure) (force argument)))
+         #'((force procedure) (force argument)))]
+    [(_ procedure argument ...)
+     (parameterize ([current-syntax-context #'procedure])
+       (wrong-syntax #'(procedure argument ...) "need just one argument"))]
     [(_ procedure)
      (parameterize ([current-syntax-context #'procedure])
        (wrong-syntax #'(procedure) "need one argument"))]
@@ -49,27 +51,23 @@
      (parameterize ([current-syntax-context #f])
        (wrong-syntax #'() "not a function application"))]))
 
-(define-syntax (fancy:lambda stx)
-  ;; A slightly fancy single-form lambda
+(define-syntax (pure:lambda stx)
+  ;; single-argument, single-form lambda
   (parameterize ([current-syntax-context stx])
     (syntax-case stx ()
+      [(_ (argument ...+) form)
+       (wrong-syntax stx "λ doesn't have a list of args")]
+      [(_ () form)
+       (wrong-syntax stx "don't even try a zero-length list of args for λ")]
       [(_ argument form)
        (identifier? #'argument)
-       #'(λ (argument) form)]
-      [(_ (argument) form)
-       (identifier? #'argument)
-       #'(fancy:lambda argument form)]
-      [(_ (argument more ...) form)
-       (identifier? #'argument)
-       #'(fancy:lambda argument (fancy:lambda (more ...) form))]
-      [(_ () form)
-       (wrong-syntax stx "zero-argument λ")]
+       #'(λ (argument) (lazy form))]
       [(_ _ form ...+)
        (wrong-syntax stx "more than one form in λ body")]
       [else
        (wrong-syntax stx "what even is this?")])))
 
-(define-syntax (fancy:define stx)
+(define-syntax (pure:define stx)
   ;; trivial define
   (parameterize ([current-syntax-context stx])
     (syntax-case stx ()
