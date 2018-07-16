@@ -17,15 +17,19 @@
 (define print-with-stashes (make-parameter #f))
 
 (define (stash-for-printing id v)
-  (hash-set! stashed v id)
+  (hash-set! stashed v (set-add (hash-ref stashed v '()) id))
   v)
 
 (current-print
  (let ([p (current-print)])
    (λ (v)
      (if (print-with-stashes)
-         (parameterize ([print-as-expression #f])
+         (parameterize ([print-as-expression #f]
+                        [print-pair-curly-braces #t])
            (p (if (hash-has-key? stashed v)
-                  (hash-ref stashed v)
+                  (let ((id/s (hash-ref stashed v)))
+                    (if (null? (rest id/s))
+                        (first id/s)
+                        id/s))
                   v)))
          (p v)))))
