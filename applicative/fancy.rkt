@@ -21,6 +21,11 @@
  #%top
  #%datum)
 
+;;; Checks (a subset of rackunit)
+;;;
+(require "../private/checks.rkt")
+(provide (all-from-out "../private/checks.rkt"))
+
 ;;; Restricted versions of some things
 (provide (rename-out
           (fancy:app #%app)
