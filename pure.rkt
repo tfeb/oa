@@ -6,5 +6,5 @@
 (module reader syntax/module-reader
   oa/pure)
 
-(require "applicative/fancy.rkt")
-(provide (all-from-out "applicative/fancy.rkt"))
+(require "applicative/pure.rkt")
+(provide (all-from-out "applicative/pure.rkt"))
