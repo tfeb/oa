@@ -9,6 +9,8 @@
 ;;; - function application can take more than one argument and uncurries:
 ;;;   (f a b ...) is ((f a) b ...)
 ;;;
+;;; This is much more flaky than the pure one.
+;;;
 
 (module reader syntax/module-reader
   oa/applicative/fancy)
@@ -39,6 +41,8 @@
          (only-in "../private/printer-hax.rkt"
                   stash-for-printing
                   print-with-stashes))
+
+(print-with-stashes (if (getenv "OA_NO_STASH_PRINTING") #f #t))
 
 (define-syntax (fancy:app stx)
   ;; A version of #%app which allows only one argument
@@ -80,7 +84,7 @@
     (syntax-case stx ()
       [(_ id form)
        (identifier? #'id)
-       #'(define id (stash-for-printing 'id form))]
+       #'(define id (stash-for-printing form 'id 'form))]
       [(_ (id ...) form ...)
        (wrong-syntax #'(id ...) "fancy defines don't work")]
       [else

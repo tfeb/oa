@@ -75,7 +75,7 @@
     (syntax-case stx ()
       [(_ id form)
        (identifier? #'id)
-       #'(define id (stash-for-printing 'id form))]
+       #'(define id (stash-for-printing form 'id 'form))]
       [(_ (id ...) form ...)
        (wrong-syntax #'(id ...) "fancy defines don't work")]
       [else

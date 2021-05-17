@@ -43,6 +43,8 @@
 
 (hold-debugging (if (getenv "OA_HOLD_DEBUGGING") #t #f))
 
+(print-with-stashes (if (getenv "OA_NO_STASH_PRINTING") #f #t))
+
 (define-syntax (pure:app stx)
   ;; A version of #%app which allows only one argument
   (syntax-case stx ()
@@ -80,10 +82,8 @@
     (syntax-case stx ()
       [(_ id form)
        (identifier? #'id)
-       #'(define id (stash-for-printing 'id form))]
+       #'(define id (stash-for-printing form 'id 'form))]
       [(_ (id ...) form ...)
        (wrong-syntax #'(id ...) "fancy defines don't work")]
       [else
        (wrong-syntax stx "what on earth is this?")])))
-
-(print-with-stashes #t)
