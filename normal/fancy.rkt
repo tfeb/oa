@@ -38,15 +38,18 @@
                               wrong-syntax))
          (only-in "../private/printer-hax.rkt"
                   stash-for-printing
-                  print-with-stashes))
+                  print-with-stashes)
+         (only-in "../private/hold.rkt"
+                  hold release release*
+                  hold-debugging))
+
+(hold-debugging (if (getenv "OA_HOLD_DEBUGGING") #t #f))
 
 (define-syntax (fancy:app stx)
   ;; A version of #%app which allows only one argument
   (syntax-case stx ()
     [(_ procedure argument)
-     (if (memq (syntax-local-context) '(top-level module module-begin))
-         #'(force (procedure argument))
-         #'(procedure argument))]
+     #'((release* procedure) (hold argument))]
     [(_ procedure argument more ...)
      #'(fancy:app (procedure argument) more ...)]
     [(_ procedure)
@@ -62,7 +65,7 @@
     (syntax-case stx ()
       [(_ argument form)
        (identifier? #'argument)
-       #'(λ (argument) (lazy form))]
+       #'(λ (argument) (hold form))]
       [(_ (argument) form)
        (identifier? #'argument)
        #'(fancy:lambda argument form)]

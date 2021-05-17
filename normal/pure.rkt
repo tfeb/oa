@@ -36,16 +36,18 @@
                               wrong-syntax))
          (only-in "../private/printer-hax.rkt"
                   stash-for-printing
-                  print-with-stashes))
+                  print-with-stashes)
+         (only-in "../private/hold.rkt"
+                  hold release release*
+                  hold-debugging))
+
+(hold-debugging (if (getenv "OA_HOLD_DEBUGGING") #t #f))
 
 (define-syntax (pure:app stx)
   ;; A version of #%app which allows only one argument
   (syntax-case stx ()
     [(_ procedure argument)
-     (if (memq (syntax-local-context) '(top-level module module-begin))
-         ;; if at toplevel then force any promises
-         #'(force ((force procedure) (force argument)))
-         #'((force procedure) (force argument)))]
+     #'((release* procedure) (hold argument))]
     [(_ procedure argument ...)
      (parameterize ([current-syntax-context #'procedure])
        (wrong-syntax #'(procedure argument ...) "need just one argument"))]
@@ -66,7 +68,7 @@
        (wrong-syntax stx "don't even try a zero-length list of args for λ")]
       [(_ argument form)
        (identifier? #'argument)
-       #'(λ (argument) (lazy form))]
+       #'(λ (argument) (hold form))]
       [(_ _ form ...+)
        (wrong-syntax stx "more than one form in λ body")]
       [else

@@ -1,4 +1,4 @@
-#lang oa/pure
+#lang oa/normal/pure
 
 (define cond (λ p (λ a (λ b ((p a) b)))))
 (define true (λ x (λ y x)))
