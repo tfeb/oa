@@ -65,7 +65,7 @@
   (parameterize ([current-syntax-context stx])
     (syntax-case stx ()
       [(_ (argument ...+) form)
-       (wrong-syntax stx "λ doesn't have a list of args")]
+       (wrong-syntax stx "λ takes a single argument, not a list of them")]
       [(_ () form)
        (wrong-syntax stx "don't even try a zero-length list of args for λ")]
       [(_ argument form)
