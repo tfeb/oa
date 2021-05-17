@@ -57,3 +57,12 @@
          ((or ((and (zero? a)) (zero? b)))
           ((and (not ((or (zero? a)) (zero? b))))
            ((= (pred a)) (pred b)))))))
+
+(test-case
+ "numbers/2"
+ (check-equiv? ((= (succ (succ (succ zero))))
+                (succ (succ (succ zero))))
+               true)
+ (check-equiv? ((= (pred (succ zero)))
+                zero)
+               true))
