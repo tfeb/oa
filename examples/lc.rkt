@@ -51,12 +51,22 @@
  (check-equiv? (zero? zero) true)
  (check-not-equiv? (zero? (succ zero)) true))
 
+;;; Everything below here is cheating as functions use themselves free:
+;;; it should use Y or U instead.
+;;;
+
 (define =
   ;; This won't work in an applicative-order language!
   (λ a (λ b
          ((or ((and (zero? a)) (zero? b)))
           ((and (not ((or (zero? a)) (zero? b))))
            ((= (pred a)) (pred b)))))))
+
+(define +
+  (λ a (λ b
+         (((cond (zero? b))
+           a)
+          ((+ (succ a)) (pred b))))))
 
 (test-case
  "numbers/2"
@@ -65,4 +75,26 @@
                true)
  (check-equiv? ((= (pred (succ zero)))
                 zero)
+               true)
+ ;; 1 + 1 = 2
+ (check-equiv? ((= ((+ (succ zero)) (succ zero)))
+               (succ (succ zero)))
                true))
+
+;;; nth element of a list
+(define nth
+  (λ n (λ c
+         (((cond (zero? n))
+           (car c))
+          ((nth (pred n)) (cdr c))))))
+
+(test-case
+ "nth"
+ (check-equiv? ((nth (succ zero))
+                ((cons (succ zero))
+                 ((cons zero) nil)))
+               zero)
+ (check-equiv? (pred ((nth zero)
+                      ((cons (succ zero))
+                       ((cons zero) nil))))
+               zero))
