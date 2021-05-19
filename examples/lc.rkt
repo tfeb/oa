@@ -1,5 +1,8 @@
 #lang oa/normal/pure
 
+;;;; Some examples for oa
+;;;
+
 (define cond (λ p (λ a (λ b ((p a) b)))))
 (define true (λ x (λ y x)))
 (define false (λ x (λ y y)))
@@ -51,22 +54,30 @@
  (check-equiv? (zero? zero) true)
  (check-not-equiv? (zero? (succ zero)) true))
 
-;;; Everything below here is cheating as functions use themselves free:
-;;; it should use Y or U instead.
+(define U
+  ;; The U combinator
+  (λ f (f f)))
+
+;;; It would be nice if the language detected free use of the variable
+;;; being defined, but that's probably unrealistic.
 ;;;
 
 (define =
   ;; This won't work in an applicative-order language!
-  (λ a (λ b
-         ((or ((and (zero? a)) (zero? b)))
-          ((and (not ((or (zero? a)) (zero? b))))
-           ((= (pred a)) (pred b)))))))
+  (U (λ e
+       (λ a
+         (λ b
+           ((or ((and (zero? a)) (zero? b)))
+            ((and (not ((or (zero? a)) (zero? b))))
+             (((U e) (pred a)) (pred b)))))))))
 
 (define +
-  (λ a (λ b
-         (((cond (zero? b))
-           a)
-          ((+ (succ a)) (pred b))))))
+  (U (λ p
+       (λ a
+         (λ b
+           (((cond (zero? b))
+             a)
+            (((U p) (succ a)) (pred b))))))))
 
 (test-case
  "numbers/2"
@@ -83,10 +94,12 @@
 
 ;;; nth element of a list
 (define nth
-  (λ n (λ c
-         (((cond (zero? n))
-           (car c))
-          ((nth (pred n)) (cdr c))))))
+  (U (λ t
+       (λ n
+         (λ c
+           (((cond (zero? n))
+             (car c))
+            (((U t) (pred n)) (cdr c))))))))
 
 (test-case
  "nth"
