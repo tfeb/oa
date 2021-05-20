@@ -55,7 +55,7 @@
     [(_ procedure argument)
      #'((release* procedure) (hold argument))]
     [(_ procedure argument more ...)
-     #'(fancy:app (procedure argument) more ...)]
+     #'(fancy:app (fancy:app procedure argument) more ...)]
     [(_ procedure)
      (parameterize ([current-syntax-context #'procedure])
        (wrong-syntax #'(procedure) "need one argument"))]
