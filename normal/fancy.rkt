@@ -43,11 +43,17 @@
                   print-with-stashes)
          (only-in "../private/hold.rkt"
                   hold release release*
-                  hold-debugging))
+                  hold-debugging)
+         (for-syntax (only-in "../private/fancy-trace.rkt"
+                              fancy-trace
+                              fancy-tracing)))
 
 (hold-debugging (if (getenv "OA_HOLD_DEBUGGING") #t #f))
 
 (print-with-stashes (if (getenv "OA_NO_STASH_PRINTING") #f #t))
+
+(begin-for-syntax
+  (fancy-tracing (if (getenv "OA_FANCY_TRACING") #t #f)))
 
 (define-syntax (fancy:app stx)
   ;; A version of #%app which allows only one argument
@@ -55,7 +61,11 @@
     [(_ procedure argument)
      #'((release* procedure) (hold argument))]
     [(_ procedure argument more ...)
-     #'(fancy:app (fancy:app procedure argument) more ...)]
+     (begin
+       (fancy-trace "apply: ~A -> ~A~%"
+                    #'(procedure argument more ...)
+                    #'((procedure argument) more ...))
+       #'(fancy:app (fancy:app procedure argument) more ...))]
     [(_ procedure)
      (parameterize ([current-syntax-context #'procedure])
        (wrong-syntax #'(procedure) "need one argument"))]
@@ -72,10 +82,18 @@
        #'(λ (argument) (hold form))]
       [(_ (argument) form)
        (identifier? #'argument)
-       #'(fancy:lambda argument form)]
+       (begin
+         (fancy-trace "λ: ~A -> ~A~%"
+                      #'(λ (argument) form)
+                      #'(λ argument form))
+         #'(fancy:lambda argument form))]
       [(_ (argument more ...) form)
        (identifier? #'argument)
-       #'(fancy:lambda argument (fancy:lambda (more ...) form))]
+       (begin
+         (fancy-trace "λ: ~A -> ~A~%"
+                      #'(λ (argument more ...) form)
+                      #'(λ argument (λ (more ...) form)))
+         #'(fancy:lambda argument (fancy:lambda (more ...) form)))]
       [(_ () form)
        (wrong-syntax stx "zero-argument λ")]
       [(_ _ form ...+)

@@ -1,7 +1,7 @@
 #lang racket
 
-;;; Just a simple-minded version of delay & force
-;;; so they can be instrumented: hold is delay, release is force
+;;;; A simple-minded version of delay & force
+;;; This is so they can be instrumented: hold is delay, release is force
 ;;;
 
 (provide hold
@@ -9,8 +9,8 @@
           (release (-> any/c any/c))
           (release* (-> any/c any/c))
           (hold-debugging (case->
-                            (-> boolean?)
-                            (-> boolean? any)))))
+                            (-> any/c)
+                            (-> any/c any)))))
 
 (define hold-debugging (make-parameter #f))
 

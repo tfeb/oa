@@ -82,10 +82,14 @@ In `oa/normal/fancy`:
 {true}: (λ x (λ y x))
 ```
 
-There are two possibly-useful environment variables:
+There are three possibly-useful environment variables:
 
 - `OA_HOLD_DEBUGGING`, if defined, will cause it to tell you when
   forms are being 'held' (equivalent to `delay`) and 'released'
   (equivalent to `force`).
 - `OA_NO_STASH_PRINTING`, if defined, will turn off all the attempted
   printing cleverness.
+ - `OA_FANCY_TRACING`, if defined, will cause it to trace the rewriting
+  of forms in the fancy languages.
+
+There should be some better way of controlling these parameters.

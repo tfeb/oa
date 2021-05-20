@@ -13,8 +13,8 @@
            (->* (any/c symbol?) (any/c) any/c))
           (print-with-stashes
            (case->
-            (-> boolean?)
-            (-> boolean? any)))))
+            (-> any/c)
+            (-> any/c any)))))
 
 (require (only-in "hold.rkt"
                   release*))
