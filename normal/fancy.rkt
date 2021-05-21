@@ -79,7 +79,7 @@
     (syntax-case stx ()
       [(_ argument form)
        (identifier? #'argument)
-       #'(λ (argument) (hold form))]
+       #'(λ (argument) form)]
       [(_ (argument) form)
        (identifier? #'argument)
        (begin

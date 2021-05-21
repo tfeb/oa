@@ -70,7 +70,7 @@
        (wrong-syntax stx "don't even try a zero-length list of args for λ")]
       [(_ argument form)
        (identifier? #'argument)
-       #'(λ (argument) (hold form))]
+       #'(λ (argument) form)]
       [(_ _ form ...+)
        (wrong-syntax stx "more than one form in λ body")]
       [else
